@@ -2,17 +2,24 @@
 
 namespace Webcomcafe\Pix;
 
+use GuzzleHttp\Client;
 use stdClass;
 
 /**
  * Gerenciar requisições para api pix
  *
- * @method static object setAccessToken(string $token) Define o token de acesso
+ * @method static object authenticate(callable $callbackAccessToken) Autentica e obtém token de acesso
+ * @method static void setAccessToken($type, $token) Define um token de acesso
  * @method static object createCob(array $data) Cria uma cobrança pix
  *
  */
 class Api
 {
+    /**
+     * @var Client $api
+     */
+    private $api;
+
     /**
      * Configurações da api
      *
@@ -32,20 +39,29 @@ class Api
      */
     public function __construct()
     {
-        $this->authenticate();
+        $this->setHttpClient();
     }
 
     /**
-     * Instancia classe
+     * Cria uma instância da classe
      *
      * @return Api|static
      */
     private static function instance(): Api
     {
-        if( !self::$instance ) {
-            self::$instance = new static();
-        }
-        return self::$instance;
+        return self::$instance ?? new static();
+    }
+
+    /**
+     * Cria objeto de requisições http
+     *
+     * @return void
+     */
+    private function setHttpClient()
+    {
+        $this->api = new Client([
+
+        ]);
     }
 
     /**
@@ -53,10 +69,10 @@ class Api
      *
      * @return void
      */
-    private function authenticate()
+    public function _authenticate(callable $callback)
     {
-        echo '<pre>';
-        print_r(static::$config->api_h);
+        $token = $this->get('auth')['token'] ?? null;
+
     }
 
     /**
@@ -70,9 +86,25 @@ class Api
         Api::$config = (object) $conf;
     }
 
+    /**
+     * Retorna um valor de configuração
+     *
+     * @param string $name
+     * @return null
+     */
+    private function get(string $name)
+    {
+        return Api::$config->$name ?? null;
+    }
+
+    /**
+     * Cria uma cobrança
+     *
+     * @param array $data
+     */
     public function _createCob(array $data)
     {
-
+        //
     }
 
     /**
