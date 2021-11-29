@@ -11,19 +11,17 @@ use Webcomcafe\Pix\Exceptions\AuthorizationException;
 /**
  * Gerenciar requisições para api pix
  *
- * @method static object authenticate(callable $callbackAccessToken) Autentica e obtém token de acesso
- * @method static void setAccessToken($type, $token) Define um token de acesso
- * @method static object createCob(array $config) Cria uma cobrança pix
+ * @Api
  *
  */
 class Api
 {
     /**
-     * Ambiente de execução (0-Homologação, 1=Produção)
+     * Prestador de serviço de pagamento
      *
-     * @var string $env
+     * @var Psp $psp
      */
-    private $env = '0';
+    private $psp;
 
     /**
      * Api de produção
@@ -33,55 +31,6 @@ class Api
     private $http;
 
     /**
-     * Api de produção
-     *
-     * @var string $api
-     */
-    private $api;
-
-    /**
-     * Api de homologação
-     *
-     * @var string $api_h
-     */
-    private $api_h;
-
-    /**
-     * Versão da api
-     *
-     * @var string $version
-     */
-    private $version;
-
-    /**
-     * Certificado e senha [path/to/cert.pem, pwd]
-     *
-     * @var array $cert
-     */
-    private $cert;
-
-    /**
-     * Informações de autenticação para obter token de acesso
-     *
-     * @var array $auth
-     */
-    private $auth = [];
-
-    /**
-     * Configurações da api
-     *
-     * @var stdClass $config
-     */
-    private static $config;
-
-    /**
-     * Instância da Api
-     *
-     * @var Api $instance
-     */
-    private static $instance;
-
-    /**
      * Callback a ser chamado após um processo de autenticação
      *
      * @var callable $authenticateCallback
@@ -89,48 +38,53 @@ class Api
     private $authenticateCallback;
 
     /**
-     * Iniciando
+     * Configurações de acesso à api pix do PSP
+     *
+     * @var array $config
      */
-    public function __construct()
+    private $config;
+
+    /**
+     * Iniciando
+     *
+     * @param array $config
+     */
+    public function __construct(array $config)
     {
-        $this->makeConfig();
+        $this->setPspInstance($this->config = $config);
+
         $this->setHttpClient();
+
+        $this->setAsGlobal();
     }
 
     /**
-     * Cria uma instância da classe
-     *
-     * @return Api|static
+     * @return void
+     * @param array $conf
      */
-    private static function instance(): Api
+    private function setPspInstance(array $conf)
     {
-        if( !self::$instance ) {
-            self::$instance = new static();
+        list($id, $secret, $grant, $scope) = $conf['auth'];
+
+        $this->psp = Psp::factory($conf['psp'])
+            ->setEnv($conf['env'])
+            ->setClientId($id)
+            ->setClientSecret($secret);
+
+        if( isset($conf['cert']) ) {
+            $this->psp->setCert($conf['cert']);
         }
 
-        return self::$instance;
-    }
+        if( isset($conf['token']) ) {
+            $this->psp->setToken($conf['token']);
+        }
 
-    /**
-     * Define configurações de acesso à api
-     *
-     * @param array $conf
-     * @return void
-     */
-    final public static function config(array $conf)
-    {
-        Api::$config = (object) $conf;
-    }
+        if( $grant ) {
+            $this->psp->setGrantType($grant);
+        }
 
-    /**
-     * Define valores de configuração às suas respectivas propriedades
-     *
-     * @return void
-     */
-    private function makeConfig()
-    {
-        foreach (Api::$config as $name => $value) {
-            $this->{$name} = $value;
+        if( $scope ) {
+            $this->psp->setScope($scope);
         }
     }
 
@@ -141,31 +95,30 @@ class Api
      */
     private function setHttpClient()
     {
-        $this->http = new Client([
-            //'cert'     => $this->cert,
-            'base_uri' => $this->getEndpointApi(),
+        $options = [
+            'base_uri' => $this->psp->getEndPointApi(),
             'timeout'  => 60,
             'headers'  => [
                 'Cache-Control' => 'no-cache',
                 'Content-Type'  => 'application/json',
             ]
-        ]);
+        ];
+
+        if( $this->psp->cert ) $options['cert'] = $this->psp->cert;
+
+        $this->http = new Client($options);
     }
 
     /**
-     * Retorna a api adequada conforme o ambiente
+     * Define a instância acessível globalmente
      *
-     * @return string
+     * @return void
      */
-    private function getEndpointApi(): string
+    private function setAsGlobal()
     {
-        $endpoint = ['0'=>$this->api_h, '1'=>$this->api][$this->env];
+        $this->psp->setApi($this);
 
-        if( $version = $this->version ) {
-            $endpoint .= '/'.$version;
-        }
-
-        return $endpoint;
+        Resource::setApi($this);
     }
 
     /**
@@ -176,17 +129,16 @@ class Api
      * @param array $options
      * @return false|stdClass|string
      */
-    private function req(string $method, string $uri, array $options = [])
+    final public function req(string $method, string $uri, array $options = [])
     {
         $result = new stdClass();
 
-        if( $this->auth['token'] ) {
+        if( $this->psp->token ) {
             $options['headers']['Authorization'] = $this->getAccessToken();
         }
 
-        if( isset($options['data']) ) {
-            $options['body'] = json_encode($options['data']);
-            unset($options['data']);
+        if( isset($options['body']) ) {
+            $options['body'] = json_encode($options['body']);
         }
 
         try {
@@ -194,13 +146,12 @@ class Api
             $args = [$method, $uri];
             if( $options ) $args[] = $options;
 
-            $result = $this->normalizeResponse (
-                $this->http->request(...$args)
-            );
+            $res = $this->http->request(...$args);
+            $result = $this->normalizeResponse ($res);
         } catch (\Throwable $e) {
             $result->detail = $e->getMessage();
-            if( $e instanceof RequestException ) {
-                $result = $this->normalizeResponse($e->getResponse());
+            if( $e instanceof RequestException && (($res=$e->getResponse()) && ($res=$this->normalizeResponse($res)))) {
+                $result = $res;
             }
         }
 
@@ -220,41 +171,66 @@ class Api
     }
 
     /**
+     * Define callback de autenticação
+     *
+     * @param callable $callback
+     * @throws AuthorizationException
+     */
+    public function authenticate(callable $callback)
+    {
+        $this->authenticateCallback = $callback;
+
+        if( $this->invalidAccessToken() ) {
+            $this->makeAuth();
+        }
+    }
+
+    /**
+     * Verifica se há um token válido
+     *
+     * @return bool
+     */
+    private function invalidAccessToken(): bool
+    {
+        return null==$this->psp->token || $this->tokenExpired($this->psp->token);
+    }
+
+    /**
      * Realiza processo de autenticação
      *
      * @throws AuthorizationException
      */
     private function makeAuth()
     {
-        $token = $this->auth['token'];
+        $token = base64_encode($this->psp->clientId.':'.$this->psp->clientSecret);
 
-        if( !$token || $this->tokenExpired($token) ) {
+        $res = $this->req('POST', $this->psp->getUriAuth(), [
+            'headers' => [
+                'Authorization' => 'Basic '.$token,
+            ],
+            'form_params' => [
+                'grant_type'    => $this->psp->grantType,
+                'scope'         => $this->psp->scope,
+            ]
+        ]);
 
-            $now = new \DateTime;
-            $auth = base64_encode($this->auth['client_id'].':'.$this->auth['client_secret']);
-
-            $res = $this->req('POST', '/auth/server/oauth/token', [
-                'headers' => [
-                    'Authorization' => 'Basic '.$auth,
-                ],
-                'form_params' => [
-                    'grant_type'    => $this->auth['grant_type'],
-                    'scope'         => $this->auth['scope'],
-                ]
-            ]);
-
-            if( isset($res->error) ) {
-                throw new AuthorizationException($res->error_description);
-            }
-
-            // Montando token
-            $this->auth['token'] = $now->getTimestamp().'.'.$res->expires_in.' '.$res->token_type.' '.$res->access_token;
-
-            self::$instance = $this;
-
-            // chamando callback
-            ($this->authenticateCallback)($this->auth['token']);
+        if( isset($res->error) || isset($res->detail) ) {
+            throw new AuthorizationException($res->error_description ?? $res->detail);
         }
+
+        // Montando token
+        $now = new \DateTime;
+        $now->modify('-10 seconds'); // Renovar faltando 10 segundos para expirar
+        $token = $now->getTimestamp().'.'.$res->expires_in.' '.$res->token_type.' '.$res->access_token;
+
+        // Define o novo token
+        $this->psp->setToken($token);
+
+        // Atualizando instância
+        $this->setAsGlobal();
+
+        // Chamando callback
+        ($this->authenticateCallback)($token);
     }
 
     /**
@@ -273,8 +249,6 @@ class Api
         $end->setTimestamp($created_at);
         $end->modify('+ '.$expire_at.' seconds');
 
-
-
         return $now >= $end;
     }
 
@@ -285,35 +259,48 @@ class Api
      */
     private function getAccessToken(): string
     {
-        list(, $type, $token) = explode(' ', $this->auth['token']);
+        list(, $type, $token) = explode(' ', $this->psp->token);
         return $type.' '.$token;
     }
 
     /**
-     * Define callback de autenticação
+     * Retorna o psp definido
      *
-     * @param callable $callback
-     * @throws AuthorizationException
+     * @return Psp
      */
-    final public function _authenticate(callable $callback)
+    public function getPsp(): Psp
     {
-        $this->authenticateCallback = $callback;
-
-        $this->makeAuth();
+        return $this->psp;
     }
 
     /**
      * Cria uma cobrança
      *
+     * @param string $txId
      * @param array $data
+     * @param array $options
      * @return false|stdClass|string
      */
-    final public function _createCob(array $data)
+    final public function _createCob(string $txId, array $data, array $options = [])
     {
-        $txId = $data['txid'];
-        unset($data['txid']);
+        $options['body'] = $data;
 
-        return $this->req('PUT', "/cob/$txId", $data);
+        return $this->req('PUT', "/cob/$txId", $options);
+    }
+
+    /**
+     * Recupera uma cobrança
+     *
+     * @param string $txid
+     * @param int $revisao
+     * @param array $options
+     * @return false|stdClass|string
+     */
+    public function _findCob(string $txid, int $revisao = 0, array $options = [])
+    {
+        $options['query']['revisao'] = $revisao;
+
+        return $this->req('GET', '/cob/'.$txid, $options);
     }
 
     /**
