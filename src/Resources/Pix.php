@@ -5,19 +5,11 @@ namespace Webcomcafe\Pix\Resources;
 use Webcomcafe\Pix\Resource;
 use stdClass as object;
 
-/**
- * Gerencia cobranças imediatas
- */
-class Cob extends Resource
+class Pix extends Resource
 {
     public function create(array $data): object
     {
-        $txid = $data['txid'] ?? null;
-        $uri = $this->psp->getCobURI($txid);
-
-        $method = $txid ? 'PUT' : 'POST';
-
-        return $this->api->req($method, $uri, $data);
+        $uri = $this->psp->getPixURI();
     }
 
     public function find(string $identify, array $data = []): object

@@ -7,29 +7,29 @@ use stdClass as object;
 interface ResourceInterface
 {
     /**
-     * @param array $config
+     * @param array $data
      * @return object
      */
-    public function create(array $config): object;
+    public function create(array $data): object;
 
     /**
      * @param string $identify
-     * @param array $config
+     * @param array $data
      * @return object
      */
-    public function find(string $identify, array $config = []): object;
+    public function find(string $identify, array $data = []): object;
 
     /**
      * @param string $identify
-     * @param array $config
+     * @param array $data
      * @return object
      */
-    public function update(string $identify, array $config): object;
+    public function update(string $identify, array $data): object;
 
     /**
      * @param string $identify
-     * @param array $config
+     * @param array $data
      * @return object
      */
-    public function delete(string $identify, array $config = []): object;
+    public function delete(string $identify, array $data = []): object;
 }

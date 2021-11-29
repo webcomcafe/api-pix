@@ -6,7 +6,7 @@ use Webcomcafe\Pix\Facade;
 use Webcomcafe\Pix\Resource;
 
 /**
- * @method static object create(array $config) Registra um webhook
+ * @method static object create(array $data) Registra um webhook
  */
 class Webhook extends Facade
 {

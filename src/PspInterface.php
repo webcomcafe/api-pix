@@ -52,13 +52,13 @@ interface PspInterface
      * @param string $grantType
      * @return PspInterface
      */
-    public function setGrantType(string $grantType): PspInterface;
+    public function setGrantType(string $grantType = null): PspInterface;
 
     /**
      * @param string $scope
      * @return PspInterface
      */
-    public function setScope(string $scope): PspInterface;
+    public function setScope(string $scope = null): PspInterface;
 
     /**
      * @param string|null $token
@@ -69,15 +69,46 @@ interface PspInterface
     /**
      * @return string
      */
+    public function getVersionURI(): string;
+
+    /**
+     * @return string
+     */
     public function getEndPointApi(): string;
 
     /**
+     * @param string $param
      * @return string
      */
-    public function getCobUri(): string;
+    public function getAuthURI(string $param = null): string;
 
     /**
+     * @param string $param
      * @return string
      */
-    public function getWebhookUri(): string;
+    public function getCobURI(string $param = null): string;
+
+    /**
+     * @param string $param
+     * @return string
+     */
+    public function getCobVURI(string $param = null): string;
+
+    /**
+     * @param string $param
+     * @return string
+     */
+    public function getLoteCobVURI(string $param = null): string;
+
+    /**
+     * @param string $param
+     * @return string
+     */
+    public function getPixURI(string $param = null): string;
+
+    /**
+     * @param string $param
+     * @return string
+     */
+    public function getWebhookURI(string $param = null): string;
 }

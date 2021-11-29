@@ -41,12 +41,12 @@ abstract class Psp implements PspInterface
     /**
      * @var string $grantType
      */
-    public $grantType =  'client_credentials';
+    public $grantType;
 
     /**
      * @var string $scope
      */
-    public $scope =  '';
+    public $scope;
 
     /**
      * @var string $token
@@ -107,9 +107,9 @@ abstract class Psp implements PspInterface
      * @param string $grantType
      * @return $this
      */
-    final public function setGrantType(string $grantType): PspInterface
+    final public function setGrantType(string $grantType = null): PspInterface
     {
-        $this->grantType = $grantType;
+        $this->grantType = $grantType ?? 'client_credentials';
         return $this;
     }
 
@@ -117,9 +117,9 @@ abstract class Psp implements PspInterface
      * @param string $scope
      * @return $this
      */
-    final public function setScope(string $scope): PspInterface
+    final public function setScope(string $scope = null): PspInterface
     {
-        $this->scope = $scope;
+        $this->scope = $scope ?? '';
         return $this;
     }
 

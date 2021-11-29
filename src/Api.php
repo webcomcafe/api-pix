@@ -5,8 +5,9 @@ namespace Webcomcafe\Pix;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Exception\RequestException;
-use stdClass;
+use stdClass as object;
 use Webcomcafe\Pix\Exceptions\AuthorizationException;
+use Throwable;
 
 /**
  * Gerenciar requisições para api pix
@@ -127,11 +128,11 @@ class Api
      * @param string $method
      * @param string $uri
      * @param array $options
-     * @return false|stdClass|string
+     * @return false|object|string
      */
     final public function req(string $method, string $uri, array $options = [])
     {
-        $result = new stdClass();
+        $result = new object();
 
         if( $this->psp->token ) {
             $options['headers']['Authorization'] = $this->getAccessToken();
@@ -144,14 +145,15 @@ class Api
         try {
 
             $args = [$method, $uri];
-            if( $options ) $args[] = $options;
+            if( !empty($options) ) $args[] = $options;
+            $result = $this->normalizeResponse ($this->http->request(...$args));
 
-            $res = $this->http->request(...$args);
-            $result = $this->normalizeResponse ($res);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $result->detail = $e->getMessage();
-            if( $e instanceof RequestException && (($res=$e->getResponse()) && ($res=$this->normalizeResponse($res)))) {
-                $result = $res;
+            if( $e instanceof RequestException && ($res=$e->getResponse())) {
+                if( $res = $this->normalizeResponse($res) ) {
+                    $result = $res;
+                }
             }
         }
 
@@ -167,6 +169,7 @@ class Api
     private function normalizeResponse(Response $response)
     {
         $contents = $response->getBody()->getContents();
+
         return json_decode($contents);
     }
 
@@ -204,7 +207,7 @@ class Api
     {
         $token = base64_encode($this->psp->clientId.':'.$this->psp->clientSecret);
 
-        $res = $this->req('POST', $this->psp->getUriAuth(), [
+        $res = $this->req('POST', $this->psp->getAuthURI(), [
             'headers' => [
                 'Authorization' => 'Basic '.$token,
             ],
@@ -223,13 +226,8 @@ class Api
         $now->modify('-10 seconds'); // Renovar faltando 10 segundos para expirar
         $token = $now->getTimestamp().'.'.$res->expires_in.' '.$res->token_type.' '.$res->access_token;
 
-        // Define o novo token
         $this->psp->setToken($token);
-
-        // Atualizando instância
         $this->setAsGlobal();
-
-        // Chamando callback
         ($this->authenticateCallback)($token);
     }
 
@@ -279,7 +277,7 @@ class Api
      * @param string $txId
      * @param array $data
      * @param array $options
-     * @return false|stdClass|string
+     * @return false|object|string
      */
     final public function _createCob(string $txId, array $data, array $options = [])
     {
@@ -294,7 +292,7 @@ class Api
      * @param string $txid
      * @param int $revisao
      * @param array $options
-     * @return false|stdClass|string
+     * @return false|object|string
      */
     public function _findCob(string $txid, int $revisao = 0, array $options = [])
     {
@@ -303,13 +301,4 @@ class Api
         return $this->req('GET', '/cob/'.$txid, $options);
     }
 
-    /**
-     * @param $name
-     * @param $arguments
-     * @return false|mixed
-     */
-    final public static function __callStatic($name, $arguments)
-    {
-        return call_user_func_array([self::instance(), '_'.$name], $arguments);
-    }
 }

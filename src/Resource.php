@@ -1,14 +1,32 @@
 <?php
 
 namespace Webcomcafe\Pix;
-use stdClass;
 
 abstract class Resource implements ResourceInterface
 {
     /**
      * @var Api $api
      */
-    protected static $api;
+    private static $globalApi;
+
+    /**
+     * @var Api $api;
+     */
+    protected $api;
+
+    /**
+     * @var Psp $psp
+     */
+    protected $psp;
+
+    /**
+     * __construct
+     */
+    final public function __construct()
+    {
+        $this->api = self::$globalApi;
+        $this->psp = $this->api->getPsp();
+    }
 
     /**
      * @param Api $api
@@ -16,17 +34,6 @@ abstract class Resource implements ResourceInterface
      */
     final public static function setApi(Api $api)
     {
-        self::$api = $api;
-    }
-
-    /**
-     * @param string $method
-     * @param string $uri
-     * @param array $options
-     * @return false|stdClass|string
-     */
-    final protected function req(string $method, string $uri, array $options = [])
-    {
-        return self::$api->req($method, $uri, $options);
+        self::$globalApi = $api;
     }
 }

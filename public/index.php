@@ -23,6 +23,9 @@ $api->authenticate(function($token) use ($name) {
 });
 
 $cob = Cob::create([]);
-$hook = Webhook::create([]);
-
-var_dump([$cob, $hook]);
+//$hook = Webhook::create([
+//    'txid' => '',
+//    'webhookUrl' => '',
+//]);
+//
+var_dump([$cob]);

@@ -11,9 +11,9 @@ use stdClass as object;
 class Webhook extends Resource
 {
 
-    public function create(array $config): object
+    public function create(array $data): object
     {
-        $uri = self::$api->getPsp()->getWebhookUri();
+        $uri = $this->psp->getWebhookURI();
 
         $o = new object();
         $o->name = $uri;
@@ -21,17 +21,17 @@ class Webhook extends Resource
         return $o;
     }
 
-    public function find(string $identify, array $config = []): object
+    public function find(string $identify, array $data = []): object
     {
         // TODO: Implement find() method.
     }
 
-    public function update(string $identify, array $config): object
+    public function update(string $identify, array $data): object
     {
         // TODO: Implement update() method.
     }
 
-    public function delete(string $identify, array $config = []): object
+    public function delete(string $identify, array $data = []): object
     {
         // TODO: Implement delete() method.
     }
