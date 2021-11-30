@@ -6,7 +6,7 @@ use Webcomcafe\Pix\Facade;
 use Webcomcafe\Pix\Resource;
 
 /**
- * @method static object create(array $config) Cria uma cobrança
+ * Gerenciamento de cobranças imediatas.
  */
 class Cob extends Facade
 {

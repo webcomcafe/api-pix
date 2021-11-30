@@ -7,26 +7,17 @@ use Webcomcafe\Pix\Psp;
 class Bradesco extends Psp
 {
     /**
-     * @var string $version
+     * [0]-Homologação, [1]-Produção
+     *
+     * @var array $endpoint
      */
-    protected $version = '';
+    protected $baseURL = ['https://qrpix-h.bradesco.com.br/api/v2', 'https://qrpix.bradesco.com.br/ap/v2'];
 
     /**
-     * @var string $endpoint
-     */
-    protected $endpoint = 'https://qrpix.bradesco.com.br/api';
-
-    /**
-     * @var string $endpoint_h
-     */
-    protected $endpoint_h = 'https://qrpix-h.bradesco.com.br/api';
-
-    /**
-     * @param string|null $param
      * @return string
      */
-    public function getAuthURI(string $param = null): string
+    public function getAuthURI(): string
     {
-        return 'auth/server/oauth/token';
+        return '/auth/server/oauth/token';
     }
 }

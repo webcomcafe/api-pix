@@ -5,20 +5,6 @@ namespace Webcomcafe\Pix;
 interface PspInterface
 {
     /**
-     * Banco Central
-     *
-     * @var string
-     */
-    const BACEN = '000';
-
-    /**
-     * Bradesco
-     *
-     * @var string
-     */
-    const BRADESCO = '237';
-
-    /**
      * @param Api $api
      * @return mixed
      */
@@ -69,18 +55,12 @@ interface PspInterface
     /**
      * @return string
      */
-    public function getVersionURI(): string;
+    public function getBaseURLApi(): string;
 
     /**
      * @return string
      */
-    public function getEndPointApi(): string;
-
-    /**
-     * @param string $param
-     * @return string
-     */
-    public function getAuthURI(string $param = null): string;
+    public function getAuthURI(): string;
 
     /**
      * @param string $param
@@ -102,6 +82,12 @@ interface PspInterface
 
     /**
      * @param string $param
+     * @return string
+     */
+    public function getPayloadLocationURI(string $param = null): string;
+
+    /**
+     * @param string|null $param
      * @return string
      */
     public function getPixURI(string $param = null): string;

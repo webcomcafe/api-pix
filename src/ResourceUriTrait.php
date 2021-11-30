@@ -5,25 +5,12 @@ namespace Webcomcafe\Pix;
 trait ResourceUriTrait
 {
     /**
-     * Endpoint da api de produção
+     * Base URL
+     * [0] Homologação, [1] Produção
      *
-     * @var string $endpoint
+     * @var array $endpoint
      */
-    protected $endpoint;
-
-    /**
-     * Endpoint da api de homologação
-     *
-     * @var string $endpoint_h
-     */
-    protected $endpoint_h;
-
-    /**
-     * Versão da api
-     *
-     * @var string $version
-     */
-    protected $version;
+    protected $baseURL = [];
 
     /**
      * @param string $uri
@@ -38,32 +25,11 @@ trait ResourceUriTrait
     /**
      * @return string
      */
-    final public function getVersionURI(): string
+    final public function getBaseURLApi(): string
     {
-        return $this->version;
-    }
+        $endpoint = $this->baseURL[$this->env];
 
-    /**
-     * @return string
-     */
-    final public function getEndPointApi(): string
-    {
-        $endpoint = [$this->endpoint_h, $this->endpoint][$this->env];
-
-        if( $version = $this->getVersionURI() ) {
-            $endpoint .= '/'.$version.'/';
-        }
-
-        return $endpoint;
-    }
-
-    /**
-     * @param string $param
-     * @return string
-     */
-    public function getAuthURI(string $param = null): string
-    {
-        return $this->configURI('auth', $param);
+        return rtrim($endpoint,'/').'/';
     }
 
     /**
@@ -91,6 +57,14 @@ trait ResourceUriTrait
     public function getLoteCobVURI(string $param = null): string
     {
         return $this->configURI('lotecobv', $param);
+    }
+
+    /**
+     * @param string|null $param
+     */
+    public function getPayloadLocationURI(string $param = null): string
+    {
+        return $this->configURI('loc', $param);
     }
 
     /**

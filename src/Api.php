@@ -97,7 +97,7 @@ class Api
     private function setHttpClient()
     {
         $options = [
-            'base_uri' => $this->psp->getEndPointApi(),
+            'base_uri' => $this->psp->getBaseURLApi(),
             'timeout'  => 60,
             'headers'  => [
                 'Cache-Control' => 'no-cache',
@@ -132,7 +132,7 @@ class Api
      */
     final public function req(string $method, string $uri, array $options = [])
     {
-        $result = new object();
+        $object = new object();
 
         if( $this->psp->token ) {
             $options['headers']['Authorization'] = $this->getAccessToken();
@@ -146,18 +146,25 @@ class Api
 
             $args = [$method, $uri];
             if( !empty($options) ) $args[] = $options;
-            $result = $this->normalizeResponse ($this->http->request(...$args));
+            $res = $this->http->request(...$args);
+            if( $res = $this->normalizeResponse ($res)) {
+                $object = $res;
+            }
+
+            $object->success = true;
 
         } catch (Throwable $e) {
-            $result->detail = $e->getMessage();
+
             if( $e instanceof RequestException && ($res=$e->getResponse())) {
                 if( $res = $this->normalizeResponse($res) ) {
-                    $result = $res;
+                    $object = $res;
                 }
             }
+
+            $object->detail = $e->getMessage();
         }
 
-        return $result;
+        return $object;
     }
 
     /**
@@ -221,6 +228,8 @@ class Api
             throw new AuthorizationException($res->error_description ?? $res->detail);
         }
 
+        var_dump($res);
+
         // Montando token
         $now = new \DateTime;
         $now->modify('-10 seconds'); // Renovar faltando 10 segundos para expirar
@@ -270,35 +279,4 @@ class Api
     {
         return $this->psp;
     }
-
-    /**
-     * Cria uma cobrança
-     *
-     * @param string $txId
-     * @param array $data
-     * @param array $options
-     * @return false|object|string
-     */
-    final public function _createCob(string $txId, array $data, array $options = [])
-    {
-        $options['body'] = $data;
-
-        return $this->req('PUT', "/cob/$txId", $options);
-    }
-
-    /**
-     * Recupera uma cobrança
-     *
-     * @param string $txid
-     * @param int $revisao
-     * @param array $options
-     * @return false|object|string
-     */
-    public function _findCob(string $txid, int $revisao = 0, array $options = [])
-    {
-        $options['query']['revisao'] = $revisao;
-
-        return $this->req('GET', '/cob/'.$txid, $options);
-    }
-
 }

@@ -2,12 +2,14 @@
 
 namespace Webcomcafe\Pix;
 
-use Webcomcafe\Pix\Psp\Bacen;
 use Webcomcafe\Pix\Psp\Bradesco;
 
 abstract class Psp implements PspInterface
 {
     use ResourceUriTrait;
+
+    /** @var string Banco Bradesco */
+    const BRADESCO = '237';
 
     /**
      * @var Api $api
@@ -143,10 +145,9 @@ abstract class Psp implements PspInterface
     {
         switch ($code)
         {
-            case self::BACEN:
-                return new Bacen();
             case self::BRADESCO:
                 return new Bradesco();
+
         }
     }
 }
