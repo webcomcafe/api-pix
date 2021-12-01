@@ -9,4 +9,5 @@ use Webcomcafe\Pix\Resource;
  */
 class Webhook extends Resource
 {
+    protected $identify = 'chave';
 }

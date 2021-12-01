@@ -108,6 +108,8 @@ class Api
         if( $this->psp->cert ) $options['cert'] = $this->psp->cert;
 
         $this->http = new Client($options);
+
+        $this->psp->setApi($this);
     }
 
     /**
@@ -117,8 +119,6 @@ class Api
      */
     private function setAsGlobal()
     {
-        $this->psp->setApi($this);
-
         Resource::setApi($this);
     }
 
@@ -228,15 +228,14 @@ class Api
             throw new AuthorizationException($res->error_description ?? $res->detail);
         }
 
-        var_dump($res);
-
         // Montando token
         $now = new \DateTime;
-        $now->modify('-10 seconds'); // Renovar faltando 10 segundos para expirar
+        $now->modify('-10 seconds');
         $token = $now->getTimestamp().'.'.$res->expires_in.' '.$res->token_type.' '.$res->access_token;
 
         $this->psp->setToken($token);
         $this->setAsGlobal();
+
         ($this->authenticateCallback)($token);
     }
 

@@ -11,7 +11,7 @@ class Bradesco extends Psp
      *
      * @var array $endpoint
      */
-    protected $baseURL = ['https://qrpix-h.bradesco.com.br/api/v2', 'https://qrpix.bradesco.com.br/ap/v2'];
+    protected $baseURL = ['https://qrpix-h.bradesco.com.br/v2', 'https://qrpix.bradesco.com.br/v2'];
 
     /**
      * @return string

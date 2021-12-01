@@ -9,4 +9,5 @@ use Webcomcafe\Pix\Resource;
  */
 class Cob extends Resource
 {
+    protected $identify = 'txid';
 }

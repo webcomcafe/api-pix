@@ -11,6 +11,11 @@ abstract class Resource implements ResourceInterface
     private static $api;
 
     /**
+     * @var string $identify
+     */
+    protected $identify;
+
+    /**
      * @param Api $api
      * @return void;
      */
@@ -80,24 +85,28 @@ abstract class Resource implements ResourceInterface
     }
 
     /**
-     * @param string $identify
      * @param array $data
      * @param array $options
      * @return object
      */
-    public function update(string $identify, array $data, array $options = []): object
+    public function update(array $data, array $options = []): object
     {
+        $identify = $data[$this->identify];
+        unset($data[$this->identify]);
+
         return $this->req('PUT', $identify, $data, $options);
     }
 
     /**
-     * @param string $identify
      * @param array $data
      * @param array $options
      * @return object
      */
-    public function change(string $identify, array $data, array $options = []): object
+    public function change(array $data, array $options = []): object
     {
+        $identify = $data[$this->identify];
+        unset($data[$this->identify]);
+
         return $this->req('PATCH', $identify, $data, $options);
     }
 

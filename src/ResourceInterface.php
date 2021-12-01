@@ -7,6 +7,7 @@ use stdClass as object;
 interface ResourceInterface
 {
     /**
+     * @param array $query
      * @param array $options
      * @return object
      */
@@ -28,20 +29,18 @@ interface ResourceInterface
     public function find(string $identify,  array $query = [], array $options = []): object;
 
     /**
-     * @param string $identify
      * @param array $data
      * @param array $options
      * @return object
      */
-    public function update(string $identify, array $data, array $options = []): object;
+    public function update(array $data, array $options = []): object;
 
     /**
-     * @param string $identify
      * @param array $data
      * @param array $options
      * @return object
      */
-    public function change(string $identify, array $data, array $options = []): object;
+    public function change(array $data, array $options = []): object;
 
     /**
      * @param string $identify

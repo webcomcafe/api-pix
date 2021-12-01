@@ -6,7 +6,7 @@ use Webcomcafe\Pix\Api;
 
 $name = __DIR__.'/access_token.txt';
 
-echo strtotime('now');
+use \Webcomcafe\Pix\Facades\Cob;
 
 $api = new Api([
     'env'   => '0',
@@ -16,7 +16,12 @@ $api = new Api([
     'token' => file_exists($name) ? file_get_contents($name) : null,
 ]);
 
-
 $api->authenticate(function($token) use ($name) {
-    file_put_contents($name, $token);
+    file_put_contents($name, strtotime('now').'.3600');
 });
+
+$cob = Cob::create([
+
+]);
+
+var_dump($cob);
