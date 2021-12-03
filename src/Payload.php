@@ -4,16 +4,39 @@ namespace Webcomcafe\Pix;
 
 class Payload
 {
-    /** @var string Globally Unique Identifier */
+    /**
+     * @var string Globally Unique Identifier
+     */
     const GUI = 'br.gov.bcb.pix';
-    /** @var string Payload Format Indicator */
+    /**
+     * @var string Payload Format Indicator
+     */
+
     const PAYLOAD_FORMAT_INDICATOR = '01';
-    /** @var string Merchant Category Code */
+    /**
+     * @var string Point of Initiation Method
+     */
+
+    const POINT_INITIATION_METHOD = '12';
+    /**
+     * @var string Merchant Category Code
+     */
+
     const MERCHANT_CATEGORY_CODE = '0000';
-    /** @var string Transaction Currency */
+    /**
+     * @var string Transaction Currency
+     */
+
     const TRANSACTION_CURRENCY = '986';
-    /** @var string Country Code */
+    /**
+     * @var string Country Code
+     */
+
     const COUNTRY_CODE = 'BR';
+    /**
+     * @var array Polinômio para cálculo CRC
+     */
+    const CRC16 = [0xFFFF, 0x1021];
 
     /**
      * Nome do recebedor
@@ -30,19 +53,25 @@ class Payload
     private $merchantCity;
 
     /**
-     * Chave PIX
+     * Url com informações para pagamento
      *
-     * @var string $chave
+     * @var string $url
      */
-    private $chave;
+    private $url;
 
     /**
-     * Valor a ser pago
+     * Identificador da transação
      *
-     * @var float $amount
+     * @var string $txid
      */
-    private $amount;
+    private $txid;
 
+    /**
+     * Descrição do pagamento
+     *
+     * @var string $description
+     */
+    private $description;
 
     /**
      * Nome do recebedor
@@ -71,60 +100,102 @@ class Payload
     }
 
     /**
-     * Chave Pix do recebdor
+     * Define a url de pagamento (sem protocolo)
      *
      * @param string $value
      * @return $this
      */
-    public function setChave(string $value): Payload
+    public function setURLLocation(string $value): Payload
     {
-        $this->chave = $value;
+        $this->url = $value;
 
         return $this;
     }
 
     /**
-     * Valor a ser apago
+     * Define o identificador da transação
      *
-     * @param float $value
+     * @param string $value
      * @return $this
      */
-    public function setAmount(float $value): Payload
+    public function setTxId(string $value): Payload
     {
-        $this->amount = $value;
+        $this->txid = $value;
 
         return $this;
     }
 
     /**
-     * Retorna tamanho + valor
+     * Define a descrição do pagamento
      *
+     * @param string $description
+     * @return $this
+     */
+    public function setDescription(string $description): Payload
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * TLV (type, length, value)
+     *
+     * @param string $type
      * @param string $value
      * @return string
      */
-    private function getValueFrom(string $value): string
+    private function setTLV(string $type, string $value): string
     {
-        $size = strlen($value);
-        $size = str_pad($size, 2, '0', STR_PAD_LEFT);
+        $length = strlen($value);
+        $length = str_pad($length, 2, '0', STR_PAD_LEFT);
 
-        return $size.$value;
+        return $type.$length.$value;
     }
 
     /**
-     * Retorna o código payload
+     * Cálculo de redundância cíclica
+     *
+     * @param string $buffer
+     * @return string
+     */
+    private function crc16(string $buffer): string
+    {
+        $result = self::CRC16[0];
+
+        for ($offset = 0; $offset < strlen($buffer); $offset++)
+        {
+            $result ^= (ord($buffer[$offset]) << 8);
+
+            for ($bitwise = 0; $bitwise < 8; $bitwise++)
+            {
+                if (($result <<= 1) & 0x10000)
+                    $result ^= self::CRC16[1];
+
+                $result &= self::CRC16[0];
+            }
+        }
+
+        return  strtoupper(dechex($result));
+    }
+
+    /**
+     * Monta e retorna o código pix pronto para ser gerado o QR Code
      *
      * @return string
      */
     public function getPayloadCode(): string
     {
-        $payload  = '000201';
-        $payload .= '2658'.'00'.$this->getValueFrom(self::GUI).'01'.$this->getValueFrom($this->chave);
-        $payload .= '52040000';
-        $payload .= '53'.$this->getValueFrom(self::TRANSACTION_CURRENCY);
-        $payload .= '58'.$this->getValueFrom(self::COUNTRY_CODE);
-        $payload .= '59'.$this->getValueFrom($this->merchantName);
-        $payload .= '60'.$this->getValueFrom($this->merchantCity);
-        $payload .= '62'.'07'.'05'.$this->getValueFrom('***');
+        $payload  = $this->setTLV('00', self::PAYLOAD_FORMAT_INDICATOR);
+        $payload .= $this->setTLV('01', self::POINT_INITIATION_METHOD);
+        $payload .= $this->setTLV('26', $this->setTLV('00', self::GUI).$this->setTLV('25', $this->url));
+        $payload .= $this->setTLV('52', self::MERCHANT_CATEGORY_CODE);
+        $payload .= $this->setTLV('53', self::TRANSACTION_CURRENCY);
+        $payload .= $this->setTLV('58', self::COUNTRY_CODE);
+        $payload .= $this->setTLV('59', $this->merchantName);
+        $payload .= $this->setTLV('60', $this->merchantCity);
+        $payload .= $this->setTLV('62', $this->setTLV('05', $this->txid));
+        $payload .= $this->setTLV('63', $this->crc16($payload.'6304'));
 
         return $payload;
     }

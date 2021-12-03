@@ -1,6 +1,6 @@
 {
     "name": "webcomcafe/pix",
-    "description": "MaGePagamentos via pix",
+    "description": "Pagamentos via pix",
     "require": {
         "guzzlehttp/guzzle": "~6.0"
     },

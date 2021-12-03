@@ -18,7 +18,7 @@ abstract class Facade implements FacadeInterface
      * @param $arguments
      * @return mixed
      */
-    public static function __callStatic($name, $arguments)
+    final public static function __callStatic($name, $arguments)
     {
         $instance = static::getInstance();
 

@@ -26,12 +26,17 @@ require __DIR__.'/../vendor/autoload.php';
 //
 //var_dump($cob);
 
-$payload = (new \Webcomcafe\Pix\Payload)
-    ->setAmount(72.96)
-    ->setChave('123e4567-e12b-12d1-a456-426655440000')
-    ->setMerchantCity('GOIANIA')
-    ->setMerchantName('1PRTD GOIANIA');
+$payload = (new Webcomcafe\Pix\Payload)
+    ->setTxId('***')
+    ->setURLLocation('pix.example.com/8b3da2f39a4140d1a91abd93113bd441')
+    ->setMerchantName('Fulano de Tal')
+    ->setMerchantCity('BRASILIA');
 
 $code = $payload->getPayloadCode();
-
+$samp1 = '00020101021226700014br.gov.bcb.pix2548pix.example.com/8b3da2f39a4140d1a91abd93113bd4415204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***630464E4';
+echo '00020101021226770014BR.GOV.BCB.PIX2555api.itau/pix/qr/v2/3ea1b5e2-55b8-4da6-b6e6-1c965f769f485204000053039865802BR5925IFOOD.COM AGENCIA DE REST6009SAO PAULO62070503***63047EAD';
+echo '<br>';
 echo($code);
+echo '<br>';
+echo $samp1;
+var_dump($code === $samp1);
