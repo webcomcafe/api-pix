@@ -95,4 +95,37 @@ class Payload
 
         return $this;
     }
+
+    /**
+     * Retorna tamanho + valor
+     *
+     * @param string $value
+     * @return string
+     */
+    private function getValueFrom(string $value): string
+    {
+        $size = strlen($value);
+        $size = str_pad($size, 2, '0', STR_PAD_LEFT);
+
+        return $size.$value;
+    }
+
+    /**
+     * Retorna o código payload
+     *
+     * @return string
+     */
+    public function getPayloadCode(): string
+    {
+        $payload  = '000201';
+        $payload .= '2658'.'00'.$this->getValueFrom(self::GUI).'01'.$this->getValueFrom($this->chave);
+        $payload .= '52040000';
+        $payload .= '53'.$this->getValueFrom(self::TRANSACTION_CURRENCY);
+        $payload .= '58'.$this->getValueFrom(self::COUNTRY_CODE);
+        $payload .= '59'.$this->getValueFrom($this->merchantName);
+        $payload .= '60'.$this->getValueFrom($this->merchantCity);
+        $payload .= '62'.'07'.'05'.$this->getValueFrom('***');
+
+        return $payload;
+    }
 }
