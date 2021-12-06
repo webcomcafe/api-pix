@@ -107,7 +107,7 @@ class Payload
      */
     public function setURLLocation(string $value): Payload
     {
-        $this->url = $value;
+        $this->url = preg_replace('/^https?:\/\//', $value, '');
 
         return $this;
     }

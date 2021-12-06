@@ -33,10 +33,15 @@ $payload = (new Webcomcafe\Pix\Payload)
     ->setMerchantCity('BRASILIA');
 
 $code = $payload->getPayloadCode();
-$samp1 = '00020101021226700014br.gov.bcb.pix2548pix.example.com/8b3da2f39a4140d1a91abd93113bd4415204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***630464E4';
-echo '00020101021226770014BR.GOV.BCB.PIX2555api.itau/pix/qr/v2/3ea1b5e2-55b8-4da6-b6e6-1c965f769f485204000053039865802BR5925IFOOD.COM AGENCIA DE REST6009SAO PAULO62070503***63047EAD';
-echo '<br>';
-echo($code);
-echo '<br>';
-echo $samp1;
-var_dump($code === $samp1);
+
+$qrCode = new \Mpdf\QrCode\QrCode($code);
+
+$image = (new \Mpdf\QrCode\Output\Png)->output($qrCode, 300);
+
+?>
+
+<h1>PIX</h1>
+
+<p><img src="data:image/png;base64,<?=base64_encode($image)?>" alt="PIX" style="border: 1px solid #333;"></p>
+
+<p><strong>Código copia e cola:</strong>: <br> <?=$code?></p>
