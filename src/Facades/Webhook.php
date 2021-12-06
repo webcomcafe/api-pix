@@ -10,7 +10,7 @@ use Webcomcafe\Pix\Resource;
  */
 class Webhook extends Facade
 {
-    public static function getInstance(): Resource
+    protected static function getInstance(): Resource
     {
         return new \Webcomcafe\Pix\Resources\Webhook();
     }

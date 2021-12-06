@@ -7,45 +7,40 @@ use stdClass as object;
 interface ResourceInterface
 {
     /**
-     * @param array $query
-     * @param array $options
+     * @param array $data
      * @return object
      */
-    public function all(array $query = [], array $options = []): object;
+    public function all(array $data = []): object;
 
     /**
      * @param array $data
-     * @param array $options
      * @return object
      */
-    public function create(array $data, array $options = []): object;
+    public function create(array $data): object;
 
     /**
      * @param string $identify
-     * @param array $query
-     * @param array $options
+     * @param array $data
      * @return object
      */
-    public function find(string $identify,  array $query = [], array $options = []): object;
+    public function find(string $identify,  array $data = []): object;
 
     /**
      * @param array $data
-     * @param array $options
      * @return object
      */
-    public function update(array $data, array $options = []): object;
+    public function update(array $data): object;
 
     /**
      * @param array $data
-     * @param array $options
      * @return object
      */
-    public function change(array $data, array $options = []): object;
+    public function change(array $data): object;
 
     /**
      * @param string $identify
-     * @param array $options
+     * @param array $data
      * @return object
      */
-    public function delete(string $identify, array $options = []): object;
+    public function delete(string $identify, array $data = []): object;
 }

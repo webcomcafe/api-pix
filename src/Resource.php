@@ -38,15 +38,41 @@ abstract class Resource implements ResourceInterface
     }
 
     /**
+     * Verifica se há opções de configurações
+     *
+     * @param array $data
+     * @return array
+     */
+    private function checkForConfigOptions(array &$data): array
+    {
+        $filter = array_filter ($data, function($key) {
+                return substr($key,0,1) == ':';
+            },
+            ARRAY_FILTER_USE_KEY
+        );
+
+        if( empty($filter) ) return [];
+
+        $data = array_diff_key($data, $filter);
+
+        $options = [];
+        foreach ($filter as $key => $value)
+            $options[substr($key,1)] = $value;
+
+        return $options;
+    }
+
+    /**
      * @param string $method
      * @param string|null $param
      * @param array $data
-     * @param array $options
      * @return false|object|string
      */
-    final protected function req(string $method, string $param = null, array $data = [], array $options = [])
+    final protected function req(string $method, string $param = null, array $data = [])
     {
         $uri = $this->getBaseUri($param);
+
+        $options = $this->checkForConfigOptions($data);
 
         if( !empty($data) ) $options['body'] = $data;
 
@@ -56,67 +82,61 @@ abstract class Resource implements ResourceInterface
     /**
      * @return array|false|object|string
      */
-    public function all(array $query = [], array $options = []): object
+    public function all(array $data = []): object
     {
-        return $this->req('GET', null, [], $options);
+        return $this->req('GET', null, $data);
     }
 
     /**
      * @param array $data
-     * @param array $options
      * @return object
      */
-    public function create(array $data, array $options = []): object
+    public function create(array $data): object
     {
-        return $this->req('POST', null, $data, $options);
+        return $this->req('POST', null, $data);
     }
 
     /**
      * @param string $identify
-     * @param array $query
-     * @param array $options
+     * @param array $data
      * @return object
      */
-    public function find(string $identify, array $query = [], array $options = []): object
+    public function find(string $identify, array $data = []): object
     {
-        $options['query'] = $query;
-
-        return $this->req('GET', $identify, [], $options);
+        return $this->req('GET', $identify, $data);
     }
 
     /**
      * @param array $data
-     * @param array $options
      * @return object
      */
-    public function update(array $data, array $options = []): object
+    public function update(array $data): object
     {
         $identify = $data[$this->identify];
         unset($data[$this->identify]);
 
-        return $this->req('PUT', $identify, $data, $options);
+        return $this->req('PUT', $identify, $data);
     }
 
     /**
      * @param array $data
-     * @param array $options
      * @return object
      */
-    public function change(array $data, array $options = []): object
+    public function change(array $data): object
     {
         $identify = $data[$this->identify];
         unset($data[$this->identify]);
 
-        return $this->req('PATCH', $identify, $data, $options);
+        return $this->req('PATCH', $identify, $data);
     }
 
     /**
      * @param string $identify
-     * @param array $options
+     * @param array $data
      * @return object
      */
-    public function delete(string $identify, array $options = []): object
+    public function delete(string $identify, array $data = []): object
     {
-        return $this->req('DELETE', $identify, [], $options);
+        return $this->req('DELETE', $identify, $data);
     }
 }
