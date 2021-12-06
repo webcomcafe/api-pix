@@ -6,7 +6,7 @@ use Webcomcafe\Pix\Psp\Bradesco;
 
 abstract class Psp implements PspInterface
 {
-    use ResourceUriTrait;
+    use BasePathResourcesTrait;
 
     /** @var string Banco Bradesco */
     const BRADESCO = '237';

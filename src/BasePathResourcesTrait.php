@@ -2,7 +2,12 @@
 
 namespace Webcomcafe\Pix;
 
-trait ResourceUriTrait
+/**
+ * Caminhos base de todos os recursos da api PIX
+ *
+ * @link https://bacen.github.io/pix-api/index.html
+ */
+trait BasePathResourcesTrait
 {
     /**
      * Base URL

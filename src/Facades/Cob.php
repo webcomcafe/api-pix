@@ -6,7 +6,7 @@ use Webcomcafe\Pix\Facade;
 use Webcomcafe\Pix\Resource;
 
 /**
- * Gerenciamento de cobranças imediatas.
+ * Reúne endpoints destinados a lidar com gerenciamento de cobranças imediatas.
  */
 class Cob extends Facade
 {

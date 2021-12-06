@@ -1,4 +1,7 @@
-certs
+certs/
+docker/
+public/
+docker-compose.yaml
 /.idea
 /.vscode
-/vendor/
+vendor/

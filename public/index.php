@@ -26,22 +26,21 @@ require __DIR__.'/../vendor/autoload.php';
 //
 //var_dump($cob);
 
-$payload = (new Webcomcafe\Pix\Payload)
-    ->setTxId('***')
-    ->setURLLocation('pix.example.com/8b3da2f39a4140d1a91abd93113bd441')
-    ->setMerchantName('Fulano de Tal')
-    ->setMerchantCity('BRASILIA');
+$payload = new Webcomcafe\Pix\Payload;
 
-$code = $payload->getPayloadCode();
-
-$qrCode = new \Mpdf\QrCode\QrCode($code);
-
-$image = (new \Mpdf\QrCode\Output\Png)->output($qrCode, 300);
+$payload
+    ->setTxId('CER1008730')
+    ->setMerchantName('1 PROTESTO GOIANIA')
+    ->setDescription('PEDIDO DE CERTIDAO')
+    ->setMerchantCity('GOIANIA')
+    //->setURLLocation('pix.example.com/8b3da2f39a4140d1a91abd93113bd441')
+    ->setChave('02894606389')
+    ->setAmount(10.56);
 
 ?>
 
 <h1>PIX</h1>
 
-<p><img src="data:image/png;base64,<?=base64_encode($image)?>" alt="PIX" style="border: 1px solid #333;"></p>
+<p><img src="data:image/png;base64, <?=$payload->getQrCode()?>" alt="PIX" style="border: 1px solid #333;"></p>
 
-<p><strong>Código copia e cola:</strong>: <br> <?=$code?></p>
+<p><strong>Código copia e cola:</strong>: <br> <?=$payload->getPixCode()?></p>

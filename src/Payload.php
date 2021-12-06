@@ -2,6 +2,9 @@
 
 namespace Webcomcafe\Pix;
 
+use Mpdf\QrCode\QrCode;
+use Mpdf\QrCode\Output\Png;
+
 class Payload
 {
     /**
@@ -74,6 +77,27 @@ class Payload
     private $description;
 
     /**
+     * Valor da transação
+     *
+     * @var float $amount
+     */
+    private $amount;
+
+    /**
+     * Chave PIX
+     *
+     * @var string $chave
+     */
+    private $chave;
+
+    /**
+     * Código pix copia e cola
+     *
+     * @var string $code
+     */
+    private $code;
+
+    /**
      * Nome do recebedor
      * 
      * @param string $value
@@ -107,7 +131,7 @@ class Payload
      */
     public function setURLLocation(string $value): Payload
     {
-        $this->url = preg_replace('/^https?:\/\//', $value, '');
+        $this->url = preg_replace('/^https?:\/\//i', '', $value);
 
         return $this;
     }
@@ -136,6 +160,60 @@ class Payload
         $this->description = $description;
 
         return $this;
+    }
+
+    /**
+     * Define o valor a ser pago
+     *
+     * @param float $amount
+     * @return $this
+     */
+    public function setAmount(float $amount): Payload
+    {
+        $this->amount = $amount;
+
+        return $this;
+    }
+
+    /**
+     * Define a chave PIX
+     *
+     * @param string $chave
+     * @return $this
+     */
+    public function setChave(string $chave): Payload
+    {
+        $this->chave = $chave;
+
+        return $this;
+    }
+
+    /**
+     * Retorna código pix copia e cola
+     *
+     * @return string
+     */
+    public function getPixCode(): string
+    {
+        if( null == $this->code ) $this->setPixCode();
+
+        return $this->code;
+    }
+
+    /**
+     * Retorna código qr em base64
+     *
+     * @param int $size
+     * @return string
+     * @throws \Mpdf\QrCode\QrCodeException
+     */
+    public function getQrCode(int $size = 300): string
+    {
+        $qrCode = new QrCode($this->getPixCode());
+
+        $image = (new Png)->output($qrCode, $size);
+
+        return base64_encode($image);
     }
 
     /**
@@ -180,23 +258,42 @@ class Payload
     }
 
     /**
-     * Monta e retorna o código pix pronto para ser gerado o QR Code
+     * Retorna informações do pagamento
      *
      * @return string
      */
-    public function getPayloadCode(): string
+    private function getMerchantAccountInformation(): string
+    {
+        $information  = $this->setTLV('00', self::GUI);
+
+        if( $this->chave ) $information .= $this->setTLV('01', $this->chave);
+        if( $this->description ) $information .= $this->setTLV('02', $this->description);
+        if( $this->url ) $information .= $this->setTLV('25', $this->url);
+
+        return $information;
+    }
+
+    /**
+     * Monta o código pix pronto para ser gerado o QR Code
+     *
+     * @return void
+     */
+    private function setPixCode()
     {
         $payload  = $this->setTLV('00', self::PAYLOAD_FORMAT_INDICATOR);
         $payload .= $this->setTLV('01', self::POINT_INITIATION_METHOD);
-        $payload .= $this->setTLV('26', $this->setTLV('00', self::GUI).$this->setTLV('25', $this->url));
+        $payload .= $this->setTLV('26', $this->getMerchantAccountInformation());
         $payload .= $this->setTLV('52', self::MERCHANT_CATEGORY_CODE);
         $payload .= $this->setTLV('53', self::TRANSACTION_CURRENCY);
+
+        if( $this->amount ) $payload .= $this->setTLV('54', (string) $this->amount);
+
         $payload .= $this->setTLV('58', self::COUNTRY_CODE);
         $payload .= $this->setTLV('59', $this->merchantName);
         $payload .= $this->setTLV('60', $this->merchantCity);
         $payload .= $this->setTLV('62', $this->setTLV('05', $this->txid));
         $payload .= $this->setTLV('63', $this->crc16($payload.'6304'));
 
-        return $payload;
+        $this->code = $payload;
     }
 }
