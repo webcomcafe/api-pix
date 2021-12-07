@@ -65,28 +65,19 @@ class Api
      */
     private function setPspInstance(array $conf)
     {
+        $conf['auth'][2] = $conf['auth'][2] ?? 'client_credentials';
+        $conf['auth'][3] = $conf['auth'][3] ?? '';
+
         list($id, $secret, $grant, $scope) = $conf['auth'];
 
         $this->psp = Psp::factory($conf['psp'])
             ->setEnv($conf['env'])
             ->setClientId($id)
-            ->setClientSecret($secret);
-
-        if( isset($conf['cert']) ) {
-            $this->psp->setCert($conf['cert']);
-        }
-
-        if( isset($conf['token']) ) {
-            $this->psp->setToken($conf['token']);
-        }
-
-        if( $grant ) {
-            $this->psp->setGrantType($grant);
-        }
-
-        if( $scope ) {
-            $this->psp->setScope($scope);
-        }
+            ->setClientSecret($secret)
+            ->setCert($conf['cert'])
+            ->setToken($conf['token'])
+            ->setGrantType($grant)
+            ->setScope($scope);
     }
 
     /**
